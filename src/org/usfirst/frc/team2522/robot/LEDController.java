@@ -27,6 +27,10 @@ public class LEDController {
 		this(new LEDOutput(r), new LEDOutput(g), new LEDOutput(b));
 	}
 	
+	public LEDController(Relay r, Relay g, Relay b) {
+		this(new LEDOutput(r), new LEDOutput(g), new LEDOutput(b));
+	}
+	
 	public void setColor(LEDUtil.Color color) {
 		this.color = color;
 		rLED.set(color.hasRed());

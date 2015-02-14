@@ -21,6 +21,11 @@ public class LEDOutput {
 		output = out;
 	}
 	
+	public LEDOutput(Relay out) {
+		out.set(Relay.Value.kOn);
+		output = out;
+	}
+	
 	public void set(boolean on) {
 		ledOn = on;
 		if(output instanceof DigitalOutput) {
@@ -36,6 +41,12 @@ public class LEDOutput {
 		} else if(output instanceof Solenoid) {
 			Solenoid led = (Solenoid) output;
 			led.set(ledOn);
+		} else if(output instanceof Relay) {
+			if(on) {
+				((Relay) output).set(Relay.Value.kOn);
+			} else {
+				((Relay) output).set(Relay.Value.kOff);
+			}
 		}
 	}
 	
