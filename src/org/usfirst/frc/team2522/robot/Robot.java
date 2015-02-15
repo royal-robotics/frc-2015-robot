@@ -1,36 +1,28 @@
 package org.usfirst.frc.team2522.robot;
 
-import org.usfirst.frc.team2522.robot.LEDUtil.Color;
-
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PWM;
-import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
-import edu.wpi.first.wpilibj.SampleRobot;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-/**
- * This is a demo program showing how to use Mecanum control with the RobotDrive
- * class.
- */
 public class Robot extends IterativeRobot {
 
 	RobotDrive robotDrive;
 
-	// Joystick
+	// Joysticks
 	// -------------------------------------------------------------------
 	Joystick leftstick;
 	Joystick rightstick;
 	Joystick operatorstick;
 
-	// VICTORSP MOTOR CONTORL
+	// Motors
 	// -------------------------------------------------------------------
 	VictorSP frontRightChannel;
 	VictorSP rearRightChannel;
@@ -41,35 +33,36 @@ public class Robot extends IterativeRobot {
 	Talon canRight;
 	Talon canLeft;
 
-	// DIO
+	// Limit Switches
 	// -------------------------------------------------------------------
-
-	DigitalInput limitUp;
-	DigitalInput limitDown;
-	DigitalOutput tests;
-	/*
-	 * DigitalOutput ledBox1; DigitalOutput ledBox2; DigitalOutput ledBox3;
-	 */
+	DigitalInput liftLimitUp;
+	DigitalInput liftLimitDown;
+	DigitalInput canLimitUp;
+	DigitalInput canLimitDown;
+	
+	// Encoders
+	// ---------------------------------------------------------------
+	Encoder rightDrive;
+	Encoder leftDrive;
+	Encoder lift;
+	
+	// LEDs
+	// ---------------------------------------------------------------
 	LEDController leds;
-	DigitalOutput redLED;
-	DigitalOutput greenLED;
-	DigitalOutput blueLED;
+	
+	// Camera
+	// ---------------------------------------------------------------
 	CameraServer server;
 
-	public void robotInit() {
-
-		server = CameraServer.getInstance();
-		// the camera name (ex "cam0") can be found through the roborio web
-		// interface
-		server.startAutomaticCapture("cam0");
-		// Encoder
+	public void robotInit() {		
+		// Init Joysticks
 		// ---------------------------------------------------------------
-		// LED
+		leftstick = new Joystick(0);
+		rightstick = new Joystick(1);
+		operatorstick = new Joystick(2);
+		
+		// Init Motors
 		// ---------------------------------------------------------------
-		// redLED = new DigitalOutput(0);
-		// greenLED = new DigitalOutput(19);
-		// blueLED = new DigitalOutput(2);
-
 		frontRightChannel = new VictorSP(0);
 		frontLeftChannel = new VictorSP(1);
 		rearRightChannel = new VictorSP(2);
@@ -79,29 +72,44 @@ public class Robot extends IterativeRobot {
 		canRight = new Talon(6);
 		canLeft = new Talon(7);
 
-		// Init Joysticks
+		// Init Drive
 		// ---------------------------------------------------------------
-		leftstick = new Joystick(0);
-		rightstick = new Joystick(1);
-		operatorstick = new Joystick(2);
-
-		limitUp = new DigitalInput(3);
-		limitDown = new DigitalInput(4);
-
 		robotDrive = new RobotDrive(frontLeftChannel, rearLeftChannel,
 				frontRightChannel, rearRightChannel);
-		// robotDrive = new RobotDrive(rearLeftChannel, frontLeftChannel,
-		// frontRightChannel, rearRightChannel);
 		robotDrive.setInvertedMotor(MotorType.kFrontRight, true);
 		robotDrive.setInvertedMotor(MotorType.kRearRight, true);
-
-		// leds = new LEDController(new Relay(0), new Relay(1), new Relay(2));
+		
+		// Init Limit Switches
+		// ---------------------------------------------------------------
+		liftLimitUp = new DigitalInput(0);
+		liftLimitDown = new DigitalInput(1);
+		canLimitUp = new DigitalInput(2);
+		canLimitDown = new DigitalInput(3);
+		
+		// Init Encoders
+		// ---------------------------------------------------------------
+		lift = new Encoder(new DigitalInput(4), new DigitalInput(5));
+		rightDrive = new Encoder(new DigitalInput(6), new DigitalInput(7));
+		leftDrive = new Encoder(new DigitalInput(8), new DigitalInput(9));
+		
+		// Init LEDs
+		// ---------------------------------------------------------------
 		leds = new LEDController(new DigitalOutput(16), new DigitalOutput(18),
 				new DigitalOutput(19));
+		
+		// Init Camera
+		// ---------------------------------------------------------------
+		server = CameraServer.getInstance();
+		server.startAutomaticCapture("cam0");
+		
+		// Init SmartDashboard
+		// ---------------------------------------------------------------
+		SmartDashboard.putNumber("Encoder Value: ", lift.get());
 	}
 
 	public void teleopPeriodic() {
-
+		// Set LED's
+		// ---------------------------------------------------------------
 		if (leftstick.getRawButton(4)) {
 			leds.setColor(LEDUtil.Color.RED);
 		}
@@ -111,43 +119,36 @@ public class Robot extends IterativeRobot {
 		if (leftstick.getRawButton(5)) {
 			leds.setColor(LEDUtil.Color.BLUE);
 		}
-		if (leftstick.getRawButton(2))
-		{
+		if (leftstick.getRawButton(2)) {
 			leds.setColor(LEDUtil.Color.OFF);
 		}
-
-		// redLED.set(leftstick.getRawButton(4));
-		// greenLED.set(leftstick.getRawButton(3));
-		// blueLED.set(leftstick.getRawButton(5));
-		// Lift
+		
+		// DeadZone Value
 		// ---------------------------------------------------------------
-		if (operatorstick.getRawButton(4) && limitUp.get()) {
+		double deadzone = 0.1;
+		
+		// Drive Container Lift
+		// ---------------------------------------------------------------
+		if (operatorstick.getRawButton(4) && !liftLimitUp.get()) {
 			liftLeft.set(-1);
 			liftRight.set(1);
-		} else if (operatorstick.getRawButton(2) && limitDown.get()) {
+		} else if (operatorstick.getRawButton(2) && !liftLimitDown.get()) {
 			liftLeft.set(1);
 			liftRight.set(-1);
 		} else {
 			liftLeft.set(0);
 			liftRight.set(0);
 		}
-
-		if (operatorstick.getRawButton(3)) {
-			canLeft.set(-.25);
-			canRight.set(.25);
-		} else if (operatorstick.getRawButton(1)) {
-			canLeft.set(.50);
-			canRight.set(-.50);
-		} else {
+		
+		// Drive Can Lift
+		// ---------------------------------------------------------------
+		if (operatorstick.getY() < deadzone && operatorstick.getY() > -deadzone) {
 			canLeft.set(0);
 			canRight.set(0);
+		} else {
+			canLeft.set(-operatorstick.getY());
+			canRight.set(operatorstick.getY());
 		}
-		/*
-		 * if(limitUp.get()) { liftLeft.set(0); liftRight.set(0); }
-		 */
-		// DeadZone Value
-		// ---------------------------------------------------------------
-		double deadzone = 0.1;
 
 		// Magnitude for Mecanum
 		// ---------------------------------------------------------------
@@ -156,37 +157,33 @@ public class Robot extends IterativeRobot {
 		{
 			magnitude = 0;
 		}
-
-		// Direction for Mecanum
+		
+		// X-Direction for Mecanum
 		// ---------------------------------------------------------------
-		// double direction = rightstick.getDirectionDegrees(); //Direction of
-		// Drive
-		// if(direction > -deadzone && direction < deadzone)
-		// {
-		// direction = 0;
-		// }
+		double leftX = leftstick.getX();
+		if (leftX > -deadzone && leftX < deadzone) {
+			leftX = 0;
+		}
+		
+		// Y-Direction for Mecanum
+		// ---------------------------------------------------------------
+		double leftY = leftstick.getY();
+		if (leftY > -deadzone && leftY < deadzone) {
+			leftY = 0;
+		}
 
 		// Rotation for Mecanum
 		// ---------------------------------------------------------------
 		double rotation = rightstick.getX();
-		double leftX = leftstick.getX();
-		double leftY = leftstick.getY();
 		if (rotation > -deadzone && rotation < deadzone) {
 			rotation = 0;
 		}
-		if (leftX > -deadzone && leftX < deadzone) {
-			leftX = 0;
-		}
-		if (leftY > -deadzone && leftY < deadzone) {
-			leftY = 0;
-		}
-		// Mecanum Polar PARAMETERS(magnitude, direction, rotation, gyro);
-		// ---------------- -----------------------------------------------
-
-		robotDrive.mecanumDrive_Cartesian(leftX, leftY, rotation /*
-																 * leftstick.getX
-																 * ()
-																 */, 0.0);
-
+		
+		// Mecanum Drive
+		// ---------------------------------------------------------------
+		robotDrive.mecanumDrive_Cartesian(leftX, leftY, rotation, 0.0);
+		
+		// Encoder Test
+		SmartDashboard.putNumber("Encoder Value: ", lift.get());
 	}
 }
