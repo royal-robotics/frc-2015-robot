@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Gyro;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
@@ -20,11 +21,13 @@ public class Robot extends IterativeRobot {
 
 	RobotDrive robotDrive;
 
-	public static final double PULSES_PER_FOOT = 171.0;
-	public static final double ButtonDelay = 0.5;
+	public static final double WHEEL_PULSES_PER_FOOT = 171.0/12.0;
+	public static final double BUTTON_DELAY = 0.5;
+	public static final double LIFT_PULSES_PER_FOOT = 325.0/12.0;
 	// public static final int Swag = 1337;
 	public String CurrentAuto = " ";
-	// Joy sticks
+
+	// Joysticks
 	// -------------------------------------------------------------------
 	Joystick leftstick;
 	Joystick rightstick;
@@ -40,11 +43,7 @@ public class Robot extends IterativeRobot {
 	VictorSP liftRight;
 	Talon canRight;
 	Talon canLeft;
-	Relay canHolder;
-	Timer holderTimer;
-	Boolean isIn = true;
-	Boolean resetButton = true;
-	Boolean liftUp = true;
+
 	// Limit Switches
 	// -------------------------------------------------------------------
 	DigitalInput liftLimitUp;
@@ -58,12 +57,22 @@ public class Robot extends IterativeRobot {
 	Encoder leftDrive;
 	Encoder lift;
 
+	Gyro Gyro1;
 	// LEDs
 	// ---------------------------------------------------------------
 	LEDController leds;
+
 	// Camera
 	// ---------------------------------------------------------------
 	CameraServer server;
+
+	// Misc.
+	// ---------------------------------------------------------------
+	Relay canHolder;
+	Timer holderTimer;
+	Boolean isIn = true;
+	Boolean resetButton = true;
+	Boolean liftUp = true;
 
 	public void robotInit() {
 		// Init Joysticks
@@ -99,15 +108,16 @@ public class Robot extends IterativeRobot {
 		canLimitUp = new DigitalInput(2);
 		canLimitDown = new DigitalInput(3);
 
+		Gyro1 = new Gyro(0);
 		// Init Encoders
 		// ---------------------------------------------------------------
-		lift = new Encoder(new DigitalInput(5), new DigitalInput(4));
+		lift = new Encoder(new DigitalInput(4), new DigitalInput(5));
 		rightDrive = new Encoder(new DigitalInput(6), new DigitalInput(7));
 		leftDrive = new Encoder(new DigitalInput(9), new DigitalInput(8));
 
-		lift.setDistancePerPulse(1 / 7009);
-		rightDrive.setDistancePerPulse(1 / PULSES_PER_FOOT);
-		leftDrive.setDistancePerPulse(1 / PULSES_PER_FOOT);
+		lift.setDistancePerPulse(1 / LIFT_PULSES_PER_FOOT);
+		rightDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_FOOT);
+		leftDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_FOOT);
 
 		lift.reset();
 		rightDrive.reset();
@@ -124,11 +134,7 @@ public class Robot extends IterativeRobot {
 
 		// Init SmartDashboard
 		// ---------------------------------------------------------------
-		SmartDashboard.putNumber("Encoder Value: ", lift.get());
-		SmartDashboard.putNumber("Right Drive Encoder Value: ",
-				rightDrive.get());
-		SmartDashboard.putNumber("Left Drive Encoder Value: ", leftDrive.get());
-		SmartDashboard.putNumber("Can Lift Speed: ", 0.0);
+		dashboardOutput(operatorstick.getY());
 	}
 
 	public void disabledPeriodic() {
@@ -140,7 +146,7 @@ public class Robot extends IterativeRobot {
 
 	public void autonomousInit() {
 		autoState = 0;
-
+		Gyro1.initGyro();
 		rightDrive.reset();
 		/*
 		 * while(rightDrive.getDistance() < 9.0) {
@@ -214,6 +220,18 @@ public class Robot extends IterativeRobot {
 
 			}
 		}
+		// Autonomus 3
+		/*
+		 * 
+		 * if(GyroAngle != 0.0) { if(GyroAngle > 0 && GyroAngle < 360) {
+		 * 
+		 * } else if(GyroAngle > 360) {
+		 * 
+		 * }
+		 * 
+		 * }
+		 */
+
 	}
 
 	public void teleopPeriodic() {
@@ -257,19 +275,20 @@ public class Robot extends IterativeRobot {
 
 		// Drive Container Lift
 		// ---------------------------------------------------------------
-		if (operatorstick.getRawButton(4) && liftLimitUp.get()) {
-			liftLeft.set(-0.75);
-			liftRight.set(0.75);
-		} else if (operatorstick.getRawButton(2) && liftLimitDown.get()) {
-			liftLeft.set(0.65);
-			liftRight.set(-0.65);
+		double containerLift = operatorstick.getRawAxis(3)*.75;
+		if ((containerLift > deadzone) && liftLimitDown.get()) {
+			liftLeft.set(containerLift);
+			liftRight.set(-containerLift);
+		} else if ((containerLift < -deadzone) && liftLimitUp.get()) {
+			liftLeft.set(containerLift);
+			liftRight.set(-containerLift);
 		} else {
 			liftLeft.set(0);
 			liftRight.set(0);
 		}
 
 		if (!liftLimitDown.get()) {
-			lift.reset();
+		//	lift.reset();
 		}
 
 		/*
@@ -301,10 +320,10 @@ public class Robot extends IterativeRobot {
 			if (isIn) {
 				canHolder.set(Value.kForward);
 				isIn = false;
-				Timer.delay(ButtonDelay);
+				Timer.delay(BUTTON_DELAY);
 				canHolder.set(Value.kReverse);
 				isIn = true;
-				Timer.delay(ButtonDelay);
+				Timer.delay(BUTTON_DELAY);
 			}
 			resetButton = false;
 		} else {
@@ -369,11 +388,16 @@ public class Robot extends IterativeRobot {
 		{
 			CurrentAuto = "Autonomus 1";
 		}
-		if (leftstick.getRawAxis(2) < 0) {
+		if (leftstick.getRawAxis(2) < 0) 
+		{
 			CurrentAuto = "Autonomus 2";
 		}
-
-		SmartDashboard.putNumber("Lift Encoder Value: ", lift.get());
+		/*if (rightstick.getRawButton(9))
+		{
+			Gyro1.reset();
+		}*/
+		SmartDashboard.putNumber("Lift Encoder Value: ", lift.getDistance());
+		SmartDashboard.putNumber("Lift Encoder Raw Value", lift.get());
 		SmartDashboard.putNumber("Right Drive Encoder Value: ",
 				rightDrive.getDistance());
 		SmartDashboard.putNumber("Left Drive Encoder Value: ",
@@ -385,7 +409,16 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putBoolean("CanDown", canLimitDown.get());
 		SmartDashboard.putNumber("Autonomous Mode", leftstick.getRawAxis(2));
 		SmartDashboard.putString("Current Autonomus", (String) CurrentAuto);
+		SmartDashboard.putNumber("Gyro", Gyro1.getAngle());
 
 		// SmartDashboard.putNumber("ROYAL ROBOTICS SWAG AMOUNT", Swag);
+	}
+
+	public void liftCan(double speed, int encoder, boolean ignoreLimit) {
+
+	}
+
+	public double ultraSonicDistance(double voltage) {
+		return voltage * 100;
 	}
 }
