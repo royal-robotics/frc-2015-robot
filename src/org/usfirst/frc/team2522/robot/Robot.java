@@ -23,8 +23,7 @@ public class Robot extends IterativeRobot {
 
 	public static final double WHEEL_PULSES_PER_FOOT = 171.0/12.0;
 	public static final double BUTTON_DELAY = 0.5;
-	public static final double LIFT_PULSES_PER_FOOT = 325.0/12.0;
-	// public static final int Swag = 1337;
+	public static final double LIFT_PULSES_PER_INCH = 28;
 	public String CurrentAuto = " ";
 
 	// Joysticks
@@ -57,7 +56,7 @@ public class Robot extends IterativeRobot {
 	Encoder leftDrive;
 	Encoder lift;
 
-	Gyro Gyro1;
+	Gyro gyro;
 	// LEDs
 	// ---------------------------------------------------------------
 	LEDController leds;
@@ -108,14 +107,14 @@ public class Robot extends IterativeRobot {
 		canLimitUp = new DigitalInput(2);
 		canLimitDown = new DigitalInput(3);
 
-		Gyro1 = new Gyro(0);
+		gyro = new Gyro(0);
 		// Init Encoders
 		// ---------------------------------------------------------------
 		lift = new Encoder(new DigitalInput(4), new DigitalInput(5));
 		rightDrive = new Encoder(new DigitalInput(6), new DigitalInput(7));
 		leftDrive = new Encoder(new DigitalInput(9), new DigitalInput(8));
 
-		lift.setDistancePerPulse(1 / LIFT_PULSES_PER_FOOT);
+		lift.setDistancePerPulse(1 / LIFT_PULSES_PER_INCH);
 		rightDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_FOOT);
 		leftDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_FOOT);
 
@@ -146,156 +145,163 @@ public class Robot extends IterativeRobot {
 
 	public void autonomousInit() {
 		autoState = 0;
-		Gyro1.initGyro();
+		
+		gyro.initGyro();
 		rightDrive.reset();
-		/*
-		 * while(rightDrive.getDistance() < 9.0) {
-		 * robotDrive.mecanumDrive_Cartesian(0, .5, 0, 0);
-		 * SmartDashboard.putNumber("autnomousLeft",leftDrive.getDistance());
-		 * SmartDashboard.putNumber("autonomousRight",rightDrive.getDistance());
-		 * 
-		 * } robotDrive.mecanumDrive_Cartesian(0,0,0,0);
-		 */
-		/*
-		 * while(liftLimitUp.get()) { liftLeft.set(-0.75); liftRight.set(0.75);
-		 * } liftLeft.set(0); liftRight.set(0); while(rightDrive.getDistance() <
-		 * -4.0) { robotDrive.mecanumDrive_Cartesian(0, .5, 0, 0);
-		 * SmartDashboard.putNumber("autnomousLeft",leftDrive.getDistance());
-		 * SmartDashboard.putNumber("autonomousRight",rightDrive.getDistance());
-		 * 
-		 * } robotDrive.mecanumDrive_Cartesian(0,0,0,0);
-		 */
+		lift.reset();
+		
 		liftUp = false;
-		SmartDashboard.putBoolean("LiftLimitHit", false);
 	}
 
 	public void autonomousPeriodic() {
 
-		SmartDashboard.putNumber("autnomousLeft", leftDrive.getDistance());
-		SmartDashboard.putNumber("autonomousRight", rightDrive.getDistance());
-		// Autonomus1
-		if (autoState == 0 && leftstick.getRawAxis(2) > 0) {
-			if (rightDrive.getDistance() < 0.5) {
-				robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
-				// SmartDashboard.putNumber("autnomousLeft",leftDrive.getDistance());
-				// SmartDashboard.putNumber("autnomousRight",rightDrive.getDistance());
-			} else {
-				robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+		
+		if (leftstick.getRawAxis(2) >= .25)	// Autonomus1
+		{
+			if (autoState == 0 && rightDrive.getDistance() > -120)
+			{
+				robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
+			}
+			else
+			{
+				robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 				autoState++;
 			}
-		} else if (autoState == 1 && leftstick.getRawAxis(2) > 0) {
-			if (liftLimitUp.get()) {
-				if (!liftUp) {
-					liftLeft.set(-0.25);
-					liftRight.set(0.25);
+		}
+		else if (leftstick.getRawAxis(2) <= -.25)	// Autonomus 2
+		{
+			if (autoState == 0)
+			{
+				moveLift(.25, 4.0);
+				if (lift.getDistance() >= 4.0)
+				{
+					moveLift(0.0);
+					autoState++;
 				}
-			} else {
-				SmartDashboard.putBoolean("LiftLimitHit", true);
-				liftUp = true;
-				liftLeft.set(0.0);
-				liftRight.set(0.0);
+			} 
+			else if (autoState == 1)
+			{
+				if (rightDrive.getDistance() < 6) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+				} else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 2)
+			{
+				moveLift(.25, 12.0);
+				if (lift.getDistance() >= 12.0)
+				{
+					moveLift(0.0);
+					autoState++;
+				}
 			}
-
-			if (rightDrive.getDistance() > -8.0 && liftUp) {
-				robotDrive.mecanumDrive_Cartesian(0, .5, 0, 0);
-				// SmartDashboard.putNumber("autnomousLeft",leftDrive.getDistance());
-				// SmartDashboard.putNumber("autonomousRight",rightDrive.getDistance());
-
-			} else {
-				robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
-				if (liftUp) {
+			else if (autoState == 3)
+			{
+				if (rightDrive.getDistance() > -120)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 					autoState++;
 				}
 			}
 		}
-		// Autonomus1 end
-
-		// Autonomus2
-		if (autoState == 0 && leftstick.getRawAxis(2) < 0) {
-			if (rightDrive.getDistance() < 20) {
-				robotDrive.mecanumDrive_Cartesian(.75, 0, 0, 0);
-			} else {
-				robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
-				autoState++;
-
+		else
+		{
+			if (autoState == 0)
+			{
+				moveLift(.25, 4.0);
+				if (lift.getDistance() >= 4.0)
+				{
+					moveLift(0.0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 1)
+			{
+				if (rightDrive.getDistance() < 6) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+				} else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 2)
+			{
+				moveLift(.25, 12.0);
+				if (lift.getDistance() >= 12.0)
+				{
+					moveLift(0.0);
+					autoState++;
+				}
+			}
+			else if (autoState == 3)
+			{
+				if (rightDrive.getDistance() > -15)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+				}
+			}
+			else if (autoState == 4)
+			{
+				if (rightDrive.getDistance() < 80)
+				{
+					robotDrive.mecanumDrive_Cartesian(.75, 0, 0, gyro.getAngle());
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+				}
 			}
 		}
-		// Autonomus 3
-		/*
-		 * 
-		 * if(GyroAngle != 0.0) { if(GyroAngle > 0 && GyroAngle < 360) {
-		 * 
-		 * } else if(GyroAngle > 360) {
-		 * 
-		 * }
-		 * 
-		 * }
-		 */
-
+		
+		dashboardOutput(0);
 	}
 
 	public void teleopPeriodic() {
-		// Set LED's
-		// ---------------------------------------------------------------
+
+
+
+		leds.setColor(LEDUtil.Color.BLUE);
+
+
+		//Drive power adjustment
+		
 		double drivePower = .5;
-
-		if (leftstick.getRawButton(4)) {
-			leds.setColor(LEDUtil.Color.RED);
-		}
-
-		if (leftstick.getRawButton(3)) {
-			leds.setColor(LEDUtil.Color.GREEN);
-		}
-
-		if (leftstick.getRawButton(5)) {
-			leds.setColor(LEDUtil.Color.BLUE);
-		}
-
-		if (leftstick.getRawButton(2)) {
-			leds.setColor(LEDUtil.Color.OFF);
-		}
-
-		if (leftstick.getRawButton(1)) {
-
-		}
-
+		
 		if (leftstick.getRawButton(1) || rightstick.getRawButton(1)) {
 			if (leftstick.getRawButton(1) && rightstick.getRawButton(1)) {
 				drivePower = 1;
 			} else {
 				drivePower = .75;
 			}
-		} else {
-			drivePower = .5;
-		}
-		// leds.setColor(LEDUtil.Color.GREEN);
+		} 
+		
 		// DeadZone Value
 		// ---------------------------------------------------------------
 		double deadzone = 0.15;
 
 		// Drive Container Lift
 		// ---------------------------------------------------------------
-		double containerLift = operatorstick.getRawAxis(3)*.75;
-		if ((containerLift > deadzone) && liftLimitDown.get()) {
-			liftLeft.set(containerLift);
-			liftRight.set(-containerLift);
-		} else if ((containerLift < -deadzone) && liftLimitUp.get()) {
-			liftLeft.set(containerLift);
-			liftRight.set(-containerLift);
-		} else {
-			liftLeft.set(0);
-			liftRight.set(0);
-		}
+		double containerLift = -operatorstick.getRawAxis(3) * 0.75;
+       
+		moveLift(containerLift);
 
-		if (!liftLimitDown.get()) {
-		//	lift.reset();
-		}
 
-		/*
-		 * double liftSpeed = operatorstick.getY(); if((canLift > 0) && (canLift
-		 * > deadzone)) { canLeft.set(-canLift*0.25);
-		 * canRight.set(canLift*0.25); }
-		 */
 		// Drive Can Lift
 		// ---------------------------------------------------------------
 		double canLift = operatorstick.getY();
@@ -316,41 +322,10 @@ public class Robot extends IterativeRobot {
 			canRight.set(0.0);
 		}
 
-		if (operatorstick.getRawButton(5) && resetButton) {
-			if (isIn) {
-				canHolder.set(Value.kForward);
-				isIn = false;
-				Timer.delay(BUTTON_DELAY);
-				canHolder.set(Value.kReverse);
-				isIn = true;
-				Timer.delay(BUTTON_DELAY);
-			}
-			resetButton = false;
-		} else {
-			canHolder.set(Value.kOff);
-			resetButton = true;
-		}
-		/*
-		 * if (operatorstick.getRawButton(6)) { canHolder.set(Value.kForward); }
-		 * else if(operatorstick.getRawButton(8)) {
-		 * canHolder.set(Value.kReverse); } else { canHolder.set(Value.kOff); }
-		 */
 
+		
 		// Magnitude for Mecanum
 		// ---------------------------------------------------------------
-		/*
-		 * double magnitude = rightstick.getMagnitude(); // Magnitude of Drive
-		 * if (magnitude < deadzone) // Dead Zone { magnitude = 0; }
-		 * 
-		 * if (leftstick.getTrigger() && rightstick.getTrigger()) {
-		 * SmartDashboard.putNumber("Drive Multiplier: ", 1); } else if
-		 * (leftstick.getTrigger() || rightstick.getTrigger()) { magnitude =
-		 * magnitude * 0.75; SmartDashboard.putNumber("Drive Multiplier: ",
-		 * .75); } else { magnitude = magnitude * 0.50;
-		 * SmartDashboard.putNumber("Drive Multiplier: ", .5); }
-		 * 
-		 * SmartDashboard.putNumber("Drive Magnitude: ", magnitude);
-		 */
 
 		// X-Direction for Mecanum
 		// ---------------------------------------------------------------
@@ -375,33 +350,29 @@ public class Robot extends IterativeRobot {
 
 		// Mecanum Drive
 		// ---------------------------------------------------------------
-		robotDrive.mecanumDrive_Cartesian(leftX * drivePower, leftY
-				* drivePower, rotation * drivePower, 0.0);
-
-		// Encoder Test
+		robotDrive.mecanumDrive_Cartesian(leftX * drivePower, leftY * drivePower, rotation * drivePower, 0.0);
+	
 		dashboardOutput(canLift);
 	}
 
-	public void dashboardOutput(double canLift) {
-		if (leftstick.getRawAxis(2) > 0)
-			;
+	public void dashboardOutput(double canLift)
+	{
+		if (leftstick.getRawAxis(2) >= .25)
 		{
 			CurrentAuto = "Autonomus 1";
 		}
-		if (leftstick.getRawAxis(2) < 0) 
+		else if (leftstick.getRawAxis(2) <= -.25) 
 		{
 			CurrentAuto = "Autonomus 2";
 		}
-		/*if (rightstick.getRawButton(9))
+		else
 		{
-			Gyro1.reset();
-		}*/
+			CurrentAuto = "Autonomus 3";
+		}
+	
 		SmartDashboard.putNumber("Lift Encoder Value: ", lift.getDistance());
-		SmartDashboard.putNumber("Lift Encoder Raw Value", lift.get());
-		SmartDashboard.putNumber("Right Drive Encoder Value: ",
-				rightDrive.getDistance());
-		SmartDashboard.putNumber("Left Drive Encoder Value: ",
-				leftDrive.getDistance());
+		SmartDashboard.putNumber("Right Drive Encoder Value: ", rightDrive.getDistance());
+		SmartDashboard.putNumber("Left Drive Encoder Value: ", leftDrive.getDistance());
 		SmartDashboard.putNumber("Can Lift Speed: ", canLift);
 		SmartDashboard.putBoolean("LiftUp", liftLimitUp.get());
 		SmartDashboard.putBoolean("LiftDown", liftLimitDown.get());
@@ -409,16 +380,41 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putBoolean("CanDown", canLimitDown.get());
 		SmartDashboard.putNumber("Autonomous Mode", leftstick.getRawAxis(2));
 		SmartDashboard.putString("Current Autonomus", (String) CurrentAuto);
-		SmartDashboard.putNumber("Gyro", Gyro1.getAngle());
-
-		// SmartDashboard.putNumber("ROYAL ROBOTICS SWAG AMOUNT", Swag);
+		SmartDashboard.putNumber("Gyro", gyro.getAngle());
 	}
 
-	public void liftCan(double speed, int encoder, boolean ignoreLimit) {
+	
+	public void moveCan(double speed, int encoder, boolean ignoreLimit) {
 
 	}
+	
+	public void moveLift(double speed) {
+		if (speed > 0) {
+			moveLift(speed, 100);
+			
+		} else {
+			moveLift(speed, -100);		
+		}
+	}
+    
+	public void moveLift(double speed, double target) {
+		
+		SmartDashboard.putNumber("LiftSpeed", speed);
+		SmartDashboard.putNumber("LiftTarget", target);
+		
+		if ((speed > 0) && liftLimitUp.get() && lift.getDistance() < target) {
+			liftLeft.set(-speed);
+			liftRight.set(speed);
+		} else if ((speed < 0) && liftLimitDown.get() && lift.getDistance() > target) {
+			liftLeft.set(-speed);
+			liftRight.set(speed);
+		} else {
+			liftLeft.set(0);
+			liftRight.set(0);
+		}
 
-	public double ultraSonicDistance(double voltage) {
-		return voltage * 100;
+		if (!liftLimitDown.get()) {
+			lift.reset();
+		}
 	}
 }
