@@ -72,7 +72,8 @@ public class Robot extends IterativeRobot {
 	Boolean isIn = true;
 	Boolean resetButton = true;
 	Boolean liftUp = true;
-
+	Boolean seenBottom = false;
+	
 	public void robotInit() {
 		// Init Joysticks
 		// ---------------------------------------------------------------
@@ -133,14 +134,19 @@ public class Robot extends IterativeRobot {
 
 		// Init SmartDashboard
 		// ---------------------------------------------------------------
-		dashboardOutput(operatorstick.getY());
+		dashboardOutput(operatorstick.getY(), 0);
 	}
 
 	public void disabledPeriodic() {
 		leds.setColor(LEDUtil.Color.WHITE);
-		dashboardOutput(operatorstick.getY());
+		dashboardOutput(operatorstick.getY(), 0);
 	}
-
+	
+	public void testPerodic() 
+	{
+		
+	}
+	
 	int autoState = 0;
 
 	public void autonomousInit() {
@@ -152,13 +158,15 @@ public class Robot extends IterativeRobot {
 		
 		liftUp = false;
 	}
-
+	//rotation and gyro positive = right
+	//rotation and gyro negative = left
 	public void autonomousPeriodic() {
 
 		
 		if (leftstick.getRawAxis(2) >= .25)	// Autonomus1
 		{
-			if (autoState == 0 && rightDrive.getDistance() > -120)
+			robotDrive.mecanumDrive_Cartesian(0, 0, .5, 0);
+			/*if (autoState == 0 && rightDrive.getDistance() > -110)
 			{
 				robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
 			}
@@ -166,7 +174,7 @@ public class Robot extends IterativeRobot {
 			{
 				robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 				autoState++;
-			}
+			}*/
 		}
 		else if (leftstick.getRawAxis(2) <= -.25)	// Autonomus 2
 		{
@@ -201,7 +209,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 3)
 			{
-				if (rightDrive.getDistance() > -120)
+				if (rightDrive.getDistance() > -115)
 				{
 					robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
 				}
@@ -212,7 +220,7 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
-		else
+		else											//Autonomous 3
 		{
 			if (autoState == 0)
 			{
@@ -236,8 +244,9 @@ public class Robot extends IterativeRobot {
 			} 
 			else if (autoState == 2)
 			{
-				moveLift(.25, 12.0);
-				if (lift.getDistance() >= 12.0)
+				moveLift(.5, 12);
+				if (lift.getDistance() >= 12)
+					
 				{
 					moveLift(0.0);
 					autoState++;
@@ -245,21 +254,24 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 3)
 			{
-				if (rightDrive.getDistance() > -15)
+				if (rightDrive.getDistance() > -13)
 				{
-					robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
+					robotDrive.mecanumDrive_Cartesian(0, .60, 0, 0);
 				}
 				else
 				{
 					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 					autoState++;
+					leftDrive.reset();
+					rightDrive.reset();
+					gyro.reset();
 				}
 			}
 			else if (autoState == 4)
 			{
-				if (rightDrive.getDistance() < 80)
+				if (rightDrive.getDistance() < 90)
 				{
-					robotDrive.mecanumDrive_Cartesian(.75, 0, 0, gyro.getAngle());
+					strafe(0.5);
 				}
 				else 
 				{
@@ -267,9 +279,119 @@ public class Robot extends IterativeRobot {
 					autoState++;
 				}
 			}
+			else if (autoState == 5) 
+			{
+				moveLift(.25, 23);
+				if (lift.getDistance() >= 23)
+				{
+					moveLift(0.0);
+					autoState++;
+					leftDrive.reset();
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 6) 
+			{
+				
+				if (rightDrive.getDistance() < 23) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+				} else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+					leftDrive.reset();
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 7)
+			{
+				moveLift(-.30, 12);
+				if (lift.getDistance() < 18)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, .3, 0, gyro.getAngle());
+				}
+				if (rightDrive.getDistance() < -8)
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+				}
+				if (lift.getDistance() <= 12)
+				{
+					moveLift(0.0);
+					autoState++;
+					leftDrive.reset();
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 8)
+			{
+				moveLift(-.25, 4.0);
+				if (lift.getDistance() <= 4)
+				{
+					moveLift(0);
+					autoState++;
+				}
+			}
+			else if (autoState == 9)
+			{
+				if (rightDrive.getDistance() < 11) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+				} else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+					leftDrive.reset();
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 10)
+			{
+				moveLift(.25, 12);
+				if (lift.getDistance() >= 12)
+				{
+					moveLift(0.0);
+					autoState++;
+				}
+			}
+			else if (autoState == 11)
+			{
+				if (rightDrive.getDistance() > -8)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, .50, 0, 0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+					leftDrive.reset();
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 12)
+			{
+				if (rightDrive.getDistance() < 95)
+				{
+					strafe(0.5);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+				}
+			}
+			else if (autoState == 13)
+			{
+				moveLift(.25, 23);
+				if (lift.getDistance() >= 23)
+				{
+					moveLift(0.0);
+					autoState++;
+				}
+			}
 		}
 		
-		dashboardOutput(0);
+		dashboardOutput(0, autoState);
 	}
 
 	public void teleopPeriodic() {
@@ -352,10 +474,10 @@ public class Robot extends IterativeRobot {
 		// ---------------------------------------------------------------
 		robotDrive.mecanumDrive_Cartesian(leftX * drivePower, leftY * drivePower, rotation * drivePower, 0.0);
 	
-		dashboardOutput(canLift);
+		dashboardOutput(canLift, 0);
 	}
 
-	public void dashboardOutput(double canLift)
+	public void dashboardOutput(double canLift, int autoState)
 	{
 		if (leftstick.getRawAxis(2) >= .25)
 		{
@@ -381,9 +503,20 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Autonomous Mode", leftstick.getRawAxis(2));
 		SmartDashboard.putString("Current Autonomus", (String) CurrentAuto);
 		SmartDashboard.putNumber("Gyro", gyro.getAngle());
+		SmartDashboard.putNumber("AutoState", autoState );
 	}
 
-	
+	public void strafe(double speed)
+	{
+		if (gyro.getAngle() > 0 )
+		{
+			robotDrive.mecanumDrive_Cartesian(speed, 0, -.05, 0.0);
+		}
+		else if (gyro.getAngle() < 0)
+		{
+			robotDrive.mecanumDrive_Cartesian(speed, 0, .05, 0.0);
+		}
+	}
 	public void moveCan(double speed, int encoder, boolean ignoreLimit) {
 
 	}
@@ -402,19 +535,30 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("LiftSpeed", speed);
 		SmartDashboard.putNumber("LiftTarget", target);
 		
-		if ((speed > 0) && liftLimitUp.get() && lift.getDistance() < target) {
+		if ((speed > 0) && liftLimitUp.get() && lift.getDistance() < target) 
+		{
 			liftLeft.set(-speed);
 			liftRight.set(speed);
-		} else if ((speed < 0) && liftLimitDown.get() && lift.getDistance() > target) {
-			liftLeft.set(-speed);
-			liftRight.set(speed);
+		} else if ((speed < 0) && liftLimitDown.get() && lift.getDistance() > target) 
+		{
+			if (seenBottom && lift.getDistance() < 0) 
+			{
+				liftLeft.set(-speed);
+				liftRight.set(speed);
+			} else 
+			{
+				liftLeft.set(-speed);
+				liftRight.set(speed);
+			}
 		} else {
 			liftLeft.set(0);
 			liftRight.set(0);
 		}
 
-		if (!liftLimitDown.get()) {
+		if (!liftLimitDown.get()) 
+		{
 			lift.reset();
+			seenBottom = true;
 		}
 	}
 }
