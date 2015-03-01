@@ -138,11 +138,15 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void disabledPeriodic() {
-		leds.setColor(LEDUtil.Color.WHITE);
+		//leds.setColor(LEDUtil.Color.WHITE);
 		dashboardOutput(operatorstick.getY(), 0);
 	}
 	
-	public void testPerodic() 
+	public void disabledInit() {
+		leds.setColor(LEDUtil.Color.WHITE);
+	}
+	
+	public void testPerodic()
 	{
 		
 	}
@@ -186,7 +190,7 @@ public class Robot extends IterativeRobot {
 					moveLift(0.0);
 					autoState++;
 				}
-			} 
+			}
 			else if (autoState == 1)
 			{
 				if (rightDrive.getDistance() < 6) 
@@ -269,9 +273,10 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 4)
 			{
-				if (rightDrive.getDistance() < 90)
+				if (rightDrive.getDistance() < 85)
 				{
 					strafe(0.5);
+					//robotDrive.mecanumDrive_Cartesian(0.5, 0.0, 0.0, gyro.getAngle());
 				}
 				else 
 				{
@@ -293,7 +298,7 @@ public class Robot extends IterativeRobot {
 			else if (autoState == 6) 
 			{
 				
-				if (rightDrive.getDistance() < 23) 
+				if (rightDrive.getDistance() < 29) 
 				{
 					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
 				} else 
@@ -325,7 +330,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 8)
 			{
-				moveLift(-.25, 4.0);
+				moveLift(-.25, 3.0);
 				if (lift.getDistance() <= 4)
 				{
 					moveLift(0);
@@ -334,7 +339,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 9)
 			{
-				if (rightDrive.getDistance() < 11) 
+				if (rightDrive.getDistance() < 12) 
 				{
 					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
 				} else 
@@ -356,7 +361,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 11)
 			{
-				if (rightDrive.getDistance() > -8)
+				if (rightDrive.getDistance() > -15)
 				{
 					robotDrive.mecanumDrive_Cartesian(0, .50, 0, 0);
 				}
@@ -370,7 +375,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 12)
 			{
-				if (rightDrive.getDistance() < 95)
+				if (rightDrive.getDistance() < 125)
 				{
 					strafe(0.5);
 				}
@@ -386,6 +391,90 @@ public class Robot extends IterativeRobot {
 				if (lift.getDistance() >= 23)
 				{
 					moveLift(0.0);
+					autoState++;
+					rightDrive.reset();
+					leftDrive.reset();
+				}
+			}
+			else if (autoState == 14)
+			{
+				if (rightDrive.getDistance() < 45)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, -0.3, 0.0, 0.0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+					rightDrive.reset();
+					leftDrive.reset();
+				}
+			}
+			else if (autoState == 15)
+			{
+				moveLift(-0.25, 3.0);
+				if (lift.getDistance() <= 18)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0.3, 0, 0);
+				}
+				if (rightDrive.getDistance() < -8)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+				}
+				if (lift.getDistance() <= 3.0)
+				{
+					moveLift(0);
+					autoState++;
+					rightDrive.reset();
+					leftDrive.reset();
+				}
+			}
+			else if (autoState == 16)
+			{
+				if (rightDrive.getDistance() < 12)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, -0.3, 0, 0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+				}
+			}
+			else if (autoState == 17)
+			{
+				moveLift(0.25, 8.0);
+				if (lift.getDistance() >= 8.0)
+				{
+					moveLift(0);
+					autoState++;
+					rightDrive.reset();
+					leftDrive.reset();
+				}
+			}
+			else if (autoState == 18)
+			{
+				if (rightDrive.getDistance() > -60.0)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0.3, 0, 0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+					rightDrive.reset();
+					leftDrive.reset();
+				}
+			}
+			else if (autoState == 19)
+			{
+				if (rightDrive.getDistance() < 20.0)
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, -0.5, 0.0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
 					autoState++;
 				}
 			}
