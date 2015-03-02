@@ -3,6 +3,8 @@ package org.usfirst.frc.team2522.robot;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Gyro;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -16,12 +18,13 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.vision.AxisCamera;
 
 public class Robot extends IterativeRobot {
 
 	RobotDrive robotDrive;
 
-	public static final double WHEEL_PULSES_PER_FOOT = 171.0/12.0;
+	public static final double WHEEL_PULSES_PER_INCH = 171.0/12.0;
 	public static final double BUTTON_DELAY = 0.5;
 	public static final double LIFT_PULSES_PER_INCH = 28;
 	public String CurrentAuto = " ";
@@ -67,6 +70,7 @@ public class Robot extends IterativeRobot {
 
 	// Misc.
 	// ---------------------------------------------------------------
+	DriverStation ds;
 	Relay canHolder;
 	Timer holderTimer;
 	Boolean isIn = true;
@@ -116,8 +120,8 @@ public class Robot extends IterativeRobot {
 		leftDrive = new Encoder(new DigitalInput(9), new DigitalInput(8));
 
 		lift.setDistancePerPulse(1 / LIFT_PULSES_PER_INCH);
-		rightDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_FOOT);
-		leftDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_FOOT);
+		rightDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_INCH);
+		leftDrive.setDistancePerPulse(1 / WHEEL_PULSES_PER_INCH);
 
 		lift.reset();
 		rightDrive.reset();
@@ -131,6 +135,8 @@ public class Robot extends IterativeRobot {
 		// ---------------------------------------------------------------
 		server = CameraServer.getInstance();
 		server.startAutomaticCapture("cam0");
+		
+		ds = DriverStation.getInstance();
 
 		// Init SmartDashboard
 		// ---------------------------------------------------------------
@@ -169,8 +175,7 @@ public class Robot extends IterativeRobot {
 		
 		if (leftstick.getRawAxis(2) >= .25)	// Autonomus1
 		{
-			robotDrive.mecanumDrive_Cartesian(0, 0, .5, 0);
-			/*if (autoState == 0 && rightDrive.getDistance() > -110)
+			if (autoState == 0 && rightDrive.getDistance() > -110)
 			{
 				robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
 			}
@@ -178,7 +183,7 @@ public class Robot extends IterativeRobot {
 			{
 				robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 				autoState++;
-			}*/
+			}
 		}
 		else if (leftstick.getRawAxis(2) <= -.25)	// Autonomus 2
 		{
@@ -273,7 +278,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 4)
 			{
-				if (rightDrive.getDistance() < 85)
+				if (rightDrive.getDistance() < 84)
 				{
 					strafe(0.5);
 					//robotDrive.mecanumDrive_Cartesian(0.5, 0.0, 0.0, gyro.getAngle());
@@ -341,7 +346,7 @@ public class Robot extends IterativeRobot {
 			{
 				if (rightDrive.getDistance() < 12) 
 				{
-					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+					robotDrive.mecanumDrive_Cartesian(0.0, -.25, 0.0, 0.0);
 				} else 
 				{
 					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
@@ -375,7 +380,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 12)
 			{
-				if (rightDrive.getDistance() < 125)
+				if (rightDrive.getDistance() < 112)
 				{
 					strafe(0.5);
 				}
@@ -482,12 +487,32 @@ public class Robot extends IterativeRobot {
 		
 		dashboardOutput(0, autoState);
 	}
-
+	
+	public void teleopInit() 
+	{
+		lift.reset();
+		seenBottom = false;
+	}
+	
 	public void teleopPeriodic() {
-
-
-
-		leds.setColor(LEDUtil.Color.BLUE);
+		
+		if (ds.getMatchTime() < 120.0) {
+			if (ds.getAlliance() == Alliance.Blue) {
+				leds.setColor(LEDUtil.Color.BLUE);
+			} else if (ds.getAlliance() == Alliance.Red) {
+				leds.setColor(LEDUtil.Color.RED);
+			} else {
+				leds.setColor(LEDUtil.Color.WHITE);
+			}
+		} else {
+			if ((int)(ds.getMatchTime() * 10) % 5 == 0) {
+				leds.setColor(LEDUtil.Color.GREEN);
+			} else {
+				leds.setColor(LEDUtil.Color.OFF);
+			}
+		}
+		
+		
 
 
 		//Drive power adjustment
@@ -628,18 +653,22 @@ public class Robot extends IterativeRobot {
 		{
 			liftLeft.set(-speed);
 			liftRight.set(speed);
-		} else if ((speed < 0) && liftLimitDown.get() && lift.getDistance() > target) 
+		}
+		else if ((speed < 0) && liftLimitDown.get() && lift.getDistance() > target) 
 		{
 			if (seenBottom && lift.getDistance() < 0) 
 			{
-				liftLeft.set(-speed);
-				liftRight.set(speed);
-			} else 
+				liftLeft.set(0);
+				liftRight.set(0);
+			}
+			else 
 			{
 				liftLeft.set(-speed);
 				liftRight.set(speed);
 			}
-		} else {
+		}
+		else
+		{
 			liftLeft.set(0);
 			liftRight.set(0);
 		}
