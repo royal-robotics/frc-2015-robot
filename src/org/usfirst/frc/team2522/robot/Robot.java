@@ -172,10 +172,15 @@ public class Robot extends IterativeRobot {
 	//rotation and gyro negative = left
 	public void autonomousPeriodic() {
 
+		int autoMode = getAutoMode();
 		
-		if (leftstick.getRawAxis(2) >= .25)	// Autonomus1
+		if (autoMode == 1)                                      // Do nothing
 		{
-			if (autoState == 0 && rightDrive.getDistance() > -110)
+			robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+		}
+		else if (autoMode == 2) 								// Drive Backwards
+		{
+			if (autoState == 0 && rightDrive.getDistance() > -80)
 			{
 				robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
 			}
@@ -185,7 +190,7 @@ public class Robot extends IterativeRobot {
 				autoState++;
 			}
 		}
-		else if (leftstick.getRawAxis(2) <= -.25)	// Autonomus 2
+		else if (autoMode == 3)			// Pick up yellow tote and drive backwards
 		{
 			if (autoState == 0)
 			{
@@ -218,9 +223,9 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 3)
 			{
-				if (rightDrive.getDistance() > -115)
+				if (rightDrive.getDistance() > -80)
 				{
-					robotDrive.mecanumDrive_Cartesian(0, .75, 0, 0);
+					robotDrive.mecanumDrive_Cartesian(0, .70, 0, 0);
 				}
 				else
 				{
@@ -229,7 +234,7 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
-		else											//Autonomous 3
+		else if (autoMode == 4)									//Pick up and stack 3 yellow totes
 		{
 			if (autoState == 0)
 			{
@@ -534,8 +539,20 @@ public class Robot extends IterativeRobot {
 		// Drive Container Lift
 		// ---------------------------------------------------------------
 		double containerLift = -operatorstick.getRawAxis(3) * 0.75;
-       
-		moveLift(containerLift);
+      
+		if (operatorstick.getRawButton(2))
+		{
+    	   moveLift(-0.50, 11);
+		} 
+		else if (operatorstick.getRawButton(4))
+		{
+			moveLift(-.50, 23);
+		}
+		else
+       	{
+   			moveLift(containerLift);
+       	}
+
 
 
 		// Drive Can Lift
@@ -575,6 +592,9 @@ public class Robot extends IterativeRobot {
 		double leftY = leftstick.getY();
 		if (leftY > -deadzone && leftY < deadzone) {
 			leftY = 0;
+		} else if((leftX > .9 || leftX < -.9) && (leftY > -.50 && leftY < .50))
+		{
+			leftY = 0;
 		}
 
 		// Rotation for Mecanum
@@ -590,22 +610,30 @@ public class Robot extends IterativeRobot {
 	
 		dashboardOutput(canLift, 0);
 	}
-
-	public void dashboardOutput(double canLift, int autoState)
+	
+	public int getAutoMode()
 	{
 		if (leftstick.getRawAxis(2) >= .25)
 		{
-			CurrentAuto = "Autonomus 1";
+			CurrentAuto = "Do Nothing";
+			return 1;
 		}
 		else if (leftstick.getRawAxis(2) <= -.25) 
 		{
-			CurrentAuto = "Autonomus 2";
+			CurrentAuto = "Drive Backwards";
+			return 2;
 		}
 		else
 		{
-			CurrentAuto = "Autonomus 3";
+			CurrentAuto = "Tote & Drive Back";
+			return 3;
 		}
+	}
 	
+	public void dashboardOutput(double canLift, int autoState)
+	{	
+		getAutoMode();
+		
 		SmartDashboard.putNumber("Lift Encoder Value: ", lift.getDistance());
 		SmartDashboard.putNumber("Right Drive Encoder Value: ", rightDrive.getDistance());
 		SmartDashboard.putNumber("Left Drive Encoder Value: ", leftDrive.getDistance());
