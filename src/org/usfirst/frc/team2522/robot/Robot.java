@@ -180,7 +180,7 @@ public class Robot extends IterativeRobot {
 		{
 			robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 		}
-		else if (autoMode == 2)                                 //Stack 4 totes in Landfill
+		if (autoMode == 2)                                      // Two totes and turn
 		{
 			if (autoState == 0)                                 //Drive Forward
 			{
@@ -196,8 +196,8 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 1)                            // Pick Up totes
 			{
-				moveLift(.75, 20);
-				if (lift.getDistance() >= 20)
+				moveLift(.75, 8);
+				if (lift.getDistance() >= 8)
 					
 				{
 					moveLift(0.0);
@@ -206,7 +206,7 @@ public class Robot extends IterativeRobot {
 			} 
 			else if (autoState == 2)                            // Drive Back
 			{
-				if (rightDrive.getDistance() > -16) 
+				if (rightDrive.getDistance() > -40) 
 				{
 					robotDrive.mecanumDrive_Cartesian(0, .50, 0, 0);
 				}
@@ -219,105 +219,70 @@ public class Robot extends IterativeRobot {
 					
 				}
 			}
-			else if (autoState == 3)                            //Strafe Left
+			else if (autoState == 3)
 			{
-				if (rightDrive.getDistance() > -86)
+				if (gyro.getAngle() > -160)
 				{
-					strafe(-.50);
+					robotDrive.mecanumDrive_Cartesian(0, 0, -.4, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+				}
+			}
+			else if (autoState == 4)
+			{
+				if (gyro.getAngle() > -180)
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,-.25,0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 5)
+			{
+				if (rightDrive.getDistance() < 58)
+				{
+					driveStraight(-.30);
 				}
 				else 
 				{
 					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 					autoState++;
-					rightDrive.reset();
 				}
 			}
-			else if (autoState == 4)                          //Drive Forward with totes
+			else if (autoState == 6)
 			{
-				if (rightDrive.getDistance() < 9)
-				{
-					robotDrive.mecanumDrive_Cartesian(0, -.5, 0, 0);
-				}
-				else 
-				{
-					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
-					autoState++;
-					rightDrive.reset();
-				}
-			}
-			else if (autoState == 5)                        //Release Totes
-			{
-				moveLift(.75, 11);
-				if (lift.getDistance() <= 11)
-					
-				{
-					moveLift(0.0);
-					autoState++;
-				}
-			}
-			else if (autoState == 6)                      //Drive Back without totes
-			{
-				if (rightDrive.getDistance() > -10)
-				{
-					robotDrive.mecanumDrive_Cartesian(0, .25, 0, 0);
-				}
-				else 
-				{
-					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
-					autoState++;
-					rightDrive.reset();
-				}
-			}
-			else if (autoState == 7)                      //Lower lift down
-			{
-				moveLift(.75, 0);
+				moveLift(.5, 0);
 				if (lift.getDistance() <= 0)
 					
 				{
 					moveLift(0.0);
 					autoState++;
+					rightDrive.reset();
+					gyro.reset();
 				}
 			}
-			else if (autoState == 8)                     //Drive forward  
+			else if (autoState == 7)
 			{
-				if (rightDrive.getDistance() < 18.5)
+				if (rightDrive.getDistance() > -50)
 				{
-					robotDrive.mecanumDrive_Cartesian(0,-.25,0,0);
+					robotDrive.mecanumDrive_Cartesian(0, .5, 0, 0);
 				}
 				else 
 				{
 					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
 					autoState++;
-					rightDrive.reset();
-				}
+				} 
 			}
-			else if (autoState == 9)                     // Pick up totes
-			{
-				moveLift(.75, 6);
-				if (lift.getDistance() >= 6)
-					
-				{
-					moveLift(0.0);
-					autoState++;
-				}
-			}
-			else if (autoState == 10)                  //Drive back
-			{
-				if (rightDrive.getDistance() > -74)
-				{
-					robotDrive.mecanumDrive_Cartesian(0,.5,0,0);
-				}
-				else 
-				{
-					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
-					autoState++;
-					rightDrive.reset();
-				}
-			}
-				
-				
+		
 		}
-		else if (autoMode == 3)			// Pick up yellow tote and drive backwards
+		else if (autoMode == 4)			// Pick up yellow tote and drive backwards
 		{
 			if (autoState == 0)
 			{
@@ -361,7 +326,7 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
-		else if (autoMode == 4)                                 //Two Totes from Landfill and Drive Back
+		else if (autoMode == 5)                                 //Two Totes from Landfill and Drive Back
 		{
 			if (autoState == 0)
 			{
@@ -402,7 +367,7 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
-		else if (autoMode == 5)									//Drive Backwards from LandFill
+		else if (autoMode == 3)									//Drive Backwards from LandFill
 		{
 			if (autoState == 0 && rightDrive.getDistance() > -84) 
 			{
@@ -679,6 +644,143 @@ public class Robot extends IterativeRobot {
 					autoState++;
 				}
 			}
+			else if (autoMode == 8)                                 //Stack 4 totes in Landfill
+			{
+				if (autoState == 0)                                 //Drive Forward
+				{
+					if (rightDrive.getDistance() < 10) 
+					{
+						robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+					} else 
+					{
+						robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+						autoState++;
+						rightDrive.reset();
+					}
+				}
+				else if (autoState == 1)                            // Pick Up totes
+				{
+					moveLift(.75, 20);
+					if (lift.getDistance() >= 20)
+						
+					{
+						moveLift(0.0);
+						autoState++;
+					}
+				} 
+				else if (autoState == 2)                            // Drive Back
+				{
+					if (rightDrive.getDistance() > -16) 
+					{
+						robotDrive.mecanumDrive_Cartesian(0, .50, 0, 0);
+					}
+					else
+					{
+						robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+						autoState++;
+						rightDrive.reset();
+						gyro.reset();
+						
+					}
+				}
+				else if (autoState == 3)                            //Strafe Left
+				{
+					if (rightDrive.getDistance() > -86)
+					{
+						strafe(-.50);
+					}
+					else 
+					{
+						robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+						autoState++;
+						rightDrive.reset();
+					}
+				}
+				else if (autoState == 4)                          //Drive Forward with totes
+				{
+					if (rightDrive.getDistance() < 9)
+					{
+						robotDrive.mecanumDrive_Cartesian(0, -.5, 0, 0);
+					}
+					else 
+					{
+						robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+						autoState++;
+						rightDrive.reset();
+					}
+				}
+				else if (autoState == 5)                        //Release Totes
+				{
+					moveLift(.75, 11);
+					if (lift.getDistance() <= 11)
+						
+					{
+						moveLift(0.0);
+						autoState++;
+					}
+				}
+				else if (autoState == 6)                      //Drive Back without totes
+				{
+					if (rightDrive.getDistance() > -10)
+					{
+						robotDrive.mecanumDrive_Cartesian(0, .25, 0, 0);
+					}
+					else 
+					{
+						robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+						autoState++;
+						rightDrive.reset();
+					}
+				}
+				else if (autoState == 7)                      //Lower lift down
+				{
+					moveLift(.75, 0);
+					if (lift.getDistance() <= 0)
+						
+					{
+						moveLift(0.0);
+						autoState++;
+					}
+				}
+				else if (autoState == 8)                     //Drive forward  
+				{
+					if (rightDrive.getDistance() < 18.5)
+					{
+						robotDrive.mecanumDrive_Cartesian(0,-.25,0,0);
+					}
+					else 
+					{
+						robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+						autoState++;
+						rightDrive.reset();
+					}
+				}
+				else if (autoState == 9)                     // Pick up totes
+				{
+					moveLift(.75, 6);
+					if (lift.getDistance() >= 6)
+						
+					{
+						moveLift(0.0);
+						autoState++;
+					}
+				}
+				else if (autoState == 10)                  //Drive back
+				{
+					if (rightDrive.getDistance() > -74)
+					{
+						robotDrive.mecanumDrive_Cartesian(0,.5,0,0);
+					}
+					else 
+					{
+						robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+						autoState++;
+						rightDrive.reset();
+					}
+				}
+					
+					
+			}
 		}
 		
 		dashboardOutput(0, autoState);
@@ -738,12 +840,12 @@ public class Robot extends IterativeRobot {
 		else if (operatorstick.getRawButton(2))
 		{
 			moveLift(.75, 0);
-			moveCan (1, 67);
+			moveCan (1, 69);
 		}
 		else if (operatorstick.getRawButton(3))
 		{
 			moveLift(.75, 2.7);
-			moveCan (1, 58);
+			moveCan (1, 60);
 		}
 		else if (operatorstick.getRawButton(4))
 		{
@@ -831,20 +933,25 @@ public class Robot extends IterativeRobot {
 	
 	public int getAutoMode()
 	{
-		if (leftstick.getRawAxis(2) >= .25)
+		if (leftstick.getRawAxis(2) >= .5)
 		{
 			CurrentAuto = "Do Nothing";
 			return 1;
 		}
-		else if (leftstick.getRawAxis(2) <= -.25) 
+		else if (leftstick.getRawAxis(2) < .5 && leftstick.getRawAxis(2) > 0) 
 		{
 			CurrentAuto = "2 Totes & Drive Back";
 			return 2;
 		}
+		else if (leftstick.getRawAxis(2) < 0 && leftstick.getRawAxis(2) > -.5)
+		{
+			CurrentAuto = "Drive Back From Landfill";
+			return 3;
+		}
 		else
 		{
-			CurrentAuto = "Tote & Drive Back";
-			return 3;
+			CurrentAuto = "Yellow Tote & Drive Back";
+			return 4;
 		}
 	}
 	
@@ -879,13 +986,24 @@ public class Robot extends IterativeRobot {
 		}
 	}
 	
+	public void driveStraight(double speed)
+	{
+		if (gyro.getAngle() > -180 )
+		{
+			robotDrive.mecanumDrive_Cartesian(0, speed, -.05, 0.0);
+		}
+		else if (gyro.getAngle() < -180)
+		{
+			robotDrive.mecanumDrive_Cartesian(0, speed, .05, 0.0);
+		}
+	}
 	public void moveCan (double speed)
 	{
 		if (speed > 0) {
 			moveCan(speed, 110);
 			
 		} else {
-			moveCan(-speed, -100);		
+			moveCan(-speed, -360);		
 		}
 	}
 	public void moveCan(double speed, double target)
