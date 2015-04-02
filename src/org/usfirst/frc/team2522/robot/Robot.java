@@ -99,13 +99,14 @@ public class Robot extends IterativeRobot {
 	VictorSP liftLeft;
 	VictorSP liftRight;
 	Talon canRight;
-	Talon canLeft;
+	Talon canBack;
 
 	// Limit Switches
 	// -------------------------------------------------------------------
 	DigitalInput liftLimitUp;
 	DigitalInput liftLimitDown;
 	DigitalInput canLimitUp;
+	DigitalInput canThiefLimit;
 
 	// Encoders
 	// ---------------------------------------------------------------
@@ -113,6 +114,7 @@ public class Robot extends IterativeRobot {
 	// Encoder leftDrive;
 	Encoder lift;
 	Encoder canArm;
+	Encoder canThief;
 
 	Gyro gyro;
 	// LEDs
@@ -171,7 +173,7 @@ public class Robot extends IterativeRobot {
 		liftRight = new VictorSP(4);
 		liftLeft = new VictorSP(5);
 		canRight = new Talon(6);
-		canLeft = new Talon(7);
+		canBack = new Talon(7);
 		canHolder = new Relay(0);
 		holderTimer = new Timer();
 
@@ -186,6 +188,7 @@ public class Robot extends IterativeRobot {
 		liftLimitUp = new DigitalInput(0);
 		liftLimitDown = new DigitalInput(1);
 		canLimitUp = new DigitalInput(2);
+		canThiefLimit = new DigitalInput(14);
 
 		gyro = new Gyro(0);
 		gyro.initGyro();
@@ -195,6 +198,7 @@ public class Robot extends IterativeRobot {
 		lift = new Encoder(new DigitalInput(4), new DigitalInput(5));
 		rightDrive = new Encoder(new DigitalInput(6), new DigitalInput(7));
 		canArm = new Encoder (new DigitalInput(8), new DigitalInput(9));
+		canThief = new Encoder(new DigitalInput (10), new DigitalInput(12));
 		
 
 		lift.setDistancePerPulse(1 / LIFT_PULSES_PER_INCH);
@@ -204,6 +208,7 @@ public class Robot extends IterativeRobot {
 		rightDrive.reset();
 		
 		canArm.reset();
+		canThief.reset();
 
 		// Init LEDs
 		// ---------------------------------------------------------------
@@ -325,7 +330,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 5)
 			{
-				if (rightDrive.getDistance() < 68)
+				if (rightDrive.getDistance() < 61) //drivingbackwardsxxyyzz
 				{
 					driveStraight(-.30);
 				}
@@ -387,7 +392,7 @@ public class Robot extends IterativeRobot {
 			
 		
 		}
-		else if (autoMode == 4)			// Pick up yellow tote and drive backwards
+		else if (autoMode == 9)			// Pick up yellow tote and drive backwards
 		{
 			if (autoState == 0)
 			{
@@ -472,7 +477,7 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
-		else if (autoMode == 3)									//Drive Backwards from LandFill
+		else if (autoMode == 3)									//Two Totes and Drive Backwards from LandFill
 		{
 			if (autoState == 0)                                 //Drive Forward
 			{
@@ -506,6 +511,149 @@ public class Robot extends IterativeRobot {
 				else
 				{
 					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+				}
+			}
+		}
+		else if (autoMode == 4)                                //2 totes from ramp
+		{
+			if (autoState == 0)                                 //Drive Forward
+			{
+				if (rightDrive.getDistance() < 10) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+				} else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 1)                            // Pick Up totes
+			{
+				moveLift(.75, 8, false);
+				if (lift.getDistance() >= 8)
+					
+				{
+					moveLift(0.0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 2)                            // Drive Back
+			{
+				if (rightDrive.getDistance() > -30) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0, .40, 0, 0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+					rightDrive.reset();
+					gyro.reset();
+					
+				}
+			}
+			else if (autoState == 3)
+			{
+				moveLift(.5, 0, false);
+				if (lift.getDistance() <= 0)
+					
+				{
+					moveLift(0.0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 4)
+			{
+				if (rightDrive.getDistance() > -10)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, .5, 0, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+				} 
+			}
+		}
+		else if (autoMode == 10)                                            // 2 bins from step
+		{
+			if (autoState == 0)                                             //Lower down canThief
+			{
+				moveThief(.35, 8);
+				if (canThief.getDistance() >= 8)
+					
+				{
+					moveThief(0.0);
+					autoState++;
+				}
+			
+			}
+			else if (autoState == 1)                                        //Drive backwards towards bins
+			{
+				if (rightDrive.getDistance() > -10) 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, .3, 0.0, 0.0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+					rightDrive.reset();
+				}
+			} 
+			else if (autoState == 2)                                     // Lift up canThief to grab bins
+			{
+				moveThief(.35, 5);
+				if (canThief.getDistance() <= 5)
+				{
+					moveThief(0.0);
+					autoState++;
+				}
+			}
+			else if (autoState == 3)                                     // Drive forward with bins
+			{
+				if (rightDrive.getDistance() > 10)
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 3)                                   // Lower canThief down
+			{
+				moveThief (.35, 8);
+				if (canThief.getDistance() >= 8)
+				{
+					moveThief(0.0);
+					autoState++;
+				}
+			}
+			else if (autoState == 4)                                  // Drive forward
+			{
+				if (rightDrive.getDistance() > 5)
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
+				}
+				else
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 5)                                  //Reset canThief
+			{
+				moveThief (.35, 0);
+				if (canThief.getDistance() >= 0)
+				{
+					moveThief(0.0);
 					autoState++;
 				}
 			}
@@ -1039,24 +1187,32 @@ public class Robot extends IterativeRobot {
 			double canLift = operatorstick.getY();
 			if ((canLift > 0) && (canLift > deadzone))
 			{
-				moveCan(canLift);
-			} 
-			else if ((canLift < 0) && (canLift < -deadzone) && canLimitUp.get()) 
-			{
-				if (operatorstick.getRawButton(6)) 
+				if (operatorstick.getRawButton(6))
 				{
-					moveCan(canLift/2);
-				} else 
+					moveThief(canLift);
+				}
+				else
 				{
 					moveCan(canLift);
 				}
+			} 
+			else if ((canLift < 0) && (canLift < -deadzone)) 
+			{
+				if (operatorstick.getRawButton(6)) 
+				{
+					moveThief(canLift);  
+				} else 
+				{
+					moveCan(canLift); 
+				}
 
-			} else 
+			} 
+			else 
 			{
 				moveCan(0);
+				moveThief(0);
 			}
 		}
-
 
 		// Magnitude for Mecanum
 		// ---------------------------------------------------------------
@@ -1101,9 +1257,9 @@ public class Robot extends IterativeRobot {
 		}
 		else if (leftstick.getRawAxis(2) < .5 && leftstick.getRawAxis(2) > 0) 
 		{
-			CurrentAuto = "2 Totes & Drive Back";
+			CurrentAuto = "2 Totes & Drive Back ";
 			return 2;
-		}
+		} 
 		else if (leftstick.getRawAxis(2) < 0 && leftstick.getRawAxis(2) > -.5)
 		{
 			CurrentAuto = "Drive Back From Landfill";
@@ -1111,7 +1267,7 @@ public class Robot extends IterativeRobot {
 		}
 		else
 		{
-			CurrentAuto = "Yellow Tote & Drive Back";
+			CurrentAuto = "2 Totes and Drive Back From Ramp";
 			return 4;
 		}
 	}
@@ -1132,7 +1288,8 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Gyro", gyro.getAngle());
 		SmartDashboard.putNumber("AutoState", autoState );
 		SmartDashboard.putNumber("CanArm Encoder Value", canArm.get());
-		
+		SmartDashboard.putNumber("canThief Encoder Value", canThief.get());
+		SmartDashboard.putBoolean("canThief Limit", canThiefLimit.get());
 	}
 	
 	public double updateCamera()
@@ -1286,7 +1443,7 @@ public class Robot extends IterativeRobot {
 		targetWidth = isLong ? 26.0 : 16.9;
 
 		return  targetWidth/(normalizedWidth*12*Math.tan(VIEW_ANGLE*Math.PI/(180*2)));
-	}
+	} // xxyyzz
 	
 	public void strafe(double speed)
 	{
@@ -1311,30 +1468,83 @@ public class Robot extends IterativeRobot {
 			robotDrive.mecanumDrive_Cartesian(0, speed, .05, 0.0);
 		}
 	}
-	public void moveCan (double speed)
+
+	public void moveThief(double speed)
 	{
-		if (speed > 0) {
-			moveCan(speed, 110);
+		if (speed > 0) 
+		{
+			moveThief(speed, 110);
 			
-		} else {
-			moveCan(-speed, -360);		
+		} else 
+		{
+
+			if (canThiefLimit.get())
+			{
+				moveThief(-speed, -360);
+			}
+			else 
+			{
+				moveThief(0, 0);
+			}		
 		}
 	}
+	
+	public void moveThief(double speed, double target)
+	{
+		if (canThief.get() < target -1)
+		{
+			canBack.set(speed);
+		}
+		else if (canThief.get() > target + 1)
+		{
+			canBack.set(-speed);
+		}
+		else
+		{
+			canBack.set(0);
+		}
+		
+		if (!canThiefLimit.get())
+		{
+			canThief.reset();
+		}
+	}
+	
+	public void moveCan (double speed)
+	{
+		if (speed > 0) 
+		{
+			moveCan(speed, 110);
+			
+		} 
+		else 
+		{ 
+			if (canLimitUp.get())
+			{
+				moveCan(-speed, -360);
+			}
+			else 
+			{
+				moveCan(0, 0);
+			}
+		}
+	}
+	
 	public void moveCan(double speed, double target)
 	{
 		if (canArm.get() < target - 1) // -2 on practice robot
 		{
-			//canLeft.set(speed);
+			//canBack.set(speed);
 			canRight.set(-speed);
 		}
 		else if (canArm.get() > target + 1) // +2 on practice robot
 		{ 
-			//canLeft.set(-speed);
+			//canBack.set(-speed);
 			canRight.set(speed);
 		}
 		else
 		{
-			//canLeft.set(0);
+			//canBack.set(0);
 			canRight.set(0);
 		}
 		
