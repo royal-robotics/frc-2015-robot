@@ -134,6 +134,7 @@ public class Robot extends IterativeRobot {
 	Boolean resetButton = true;
 	Boolean seenBottom = false;
 	double topEncoder = 100;
+	Timer canThiefTimer = new Timer();
 	
 	public void robotInit() {
 		// Init Vision Tracking
@@ -251,6 +252,8 @@ public class Robot extends IterativeRobot {
 		lift.reset();
 		gyro.reset();
 		
+		canThiefTimer.start();
+		canThiefTimer.reset();
 	}
 
 	//rotation and gyro positive = right
@@ -330,7 +333,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 5)
 			{
-				if (rightDrive.getDistance() < 61) //drivingbackwardsxxyyzz
+				if (rightDrive.getDistance() < 64) 
 				{
 					driveStraight(-.30);
 				}
@@ -541,9 +544,9 @@ public class Robot extends IterativeRobot {
 			} 
 			else if (autoState == 2)                            // Drive Back
 			{
-				if (rightDrive.getDistance() > -30) 
+				if (rightDrive.getDistance() > -60) 
 				{
-					robotDrive.mecanumDrive_Cartesian(0, .40, 0, 0);
+					robotDrive.mecanumDrive_Cartesian(0, .35, 0, 0);
 				}
 				else
 				{
@@ -555,6 +558,19 @@ public class Robot extends IterativeRobot {
 				}
 			}
 			else if (autoState == 3)
+			{
+				if (rightDrive.getDistance() < 40)
+				{
+					strafe(0.45);
+					//robotDrive.mecanumDrive_Cartesian(0.5, 0.0, 0.0, gyro.getAngle());
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 4)
 			{
 				moveLift(.5, 0, false);
 				if (lift.getDistance() <= 0)
@@ -580,22 +596,13 @@ public class Robot extends IterativeRobot {
 		}
 		else if (autoMode == 10)                                            // 2 bins from step
 		{
-			if (autoState == 0)                                             //Lower down canThief
+		
+			if (autoState == 0)                                        //Drive backwards towards bins
 			{
-				moveThief(.35, 8);
-				if (canThief.getDistance() >= 8)
-					
+				if (rightDrive.getDistance() > -8) 
 				{
-					moveThief(0.0);
-					autoState++;
-				}
-			
-			}
-			else if (autoState == 1)                                        //Drive backwards towards bins
-			{
-				if (rightDrive.getDistance() > -10) 
-				{
-					robotDrive.mecanumDrive_Cartesian(0.0, .3, 0.0, 0.0);
+					// driveStraight(.30);
+					robotDrive.mecanumDrive_Cartesian(0, .3, 0, gyro.getAngle());
 				}
 				else 
 				{
@@ -603,21 +610,30 @@ public class Robot extends IterativeRobot {
 					autoState++;
 					rightDrive.reset();
 				}
-			} 
-			else if (autoState == 2)                                     // Lift up canThief to grab bins
+			}
+			else if (autoState == 1)                                             //Lower down canThief
 			{
-				moveThief(.35, 5);
-				if (canThief.getDistance() <= 5)
+				if (canThief.getDistance() >= 79)
 				{
 					moveThief(0.0);
-					autoState++;
+					if (canThiefTimer.get() > 0.5)
+					{
+						autoState++;
+					}
 				}
-			}
-			else if (autoState == 3)                                     // Drive forward with bins
-			{
-				if (rightDrive.getDistance() > 10)
+				else 
 				{
-					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0, 0);
+					moveThief(.60, 80);
+					canThiefTimer.reset();
+				}
+			
+			} 			
+			else if (autoState == 2)                                     // Drive forward with bins
+			{
+				if (rightDrive.getDistance() < 40)
+				{
+					// driveStraight(-.30);
+					robotDrive.mecanumDrive_Cartesian(0, -.3, 0, 0);
 				}
 				else 
 				{
@@ -625,35 +641,63 @@ public class Robot extends IterativeRobot {
 					autoState++;
 					rightDrive.reset();
 				}
-			}
-			else if (autoState == 3)                                   // Lower canThief down
+			}	
+			else if (autoState == 3)                                  // Drive backwards
 			{
-				moveThief (.35, 8);
-				if (canThief.getDistance() >= 8)
+				if (rightDrive.getDistance() > -38)
 				{
-					moveThief(0.0);
-					autoState++;
+					// driveStraight(.30);
+					robotDrive.mecanumDrive_Cartesian(0, .3, 0, 0);
 				}
-			}
-			else if (autoState == 4)                                  // Drive forward
-			{
-				if (rightDrive.getDistance() > 5)
-				{
-					robotDrive.mecanumDrive_Cartesian(0.0, -.3, 0.0, 0.0);
-				}
-				else
+				else 
 				{
 					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 					autoState++;
 					rightDrive.reset();
 				}
-			}
-			else if (autoState == 5)                                  //Reset canThief
-			{
-				moveThief (.35, 0);
-				if (canThief.getDistance() >= 0)
+				
+				if (rightDrive.getDistance() > -28)
 				{
 					moveThief(0.0);
+				}
+				else
+				{
+					moveThief(.30, 0);
+				}
+			}
+			else if (autoState == 4)                                  //Reset canThief
+			{
+				moveThief (.30, 0);
+				if (canThief.getDistance() <= 0)
+				{
+					moveThief(0.0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 5)
+			{
+				if (rightDrive.getDistance() < 70)
+				{
+					// driveStraight(-.30);
+					robotDrive.mecanumDrive_Cartesian(0, -.3, 0, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+					rightDrive.reset();
+					gyro.reset();
+				}
+			}
+			else if (autoState == 6)
+			{
+				if (gyro.getAngle() < 190)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, .4, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
 					autoState++;
 				}
 			}
@@ -1250,10 +1294,15 @@ public class Robot extends IterativeRobot {
 	
 	public int getAutoMode()
 	{
-		if (leftstick.getRawAxis(2) >= .5)
+		if (leftstick.getRawAxis(2) >= .5 && rightstick.getRawAxis(2) > .5)     // remove rightstick.getRawAxis(2) >.5
 		{
 			CurrentAuto = "Do Nothing";
 			return 1;
+		}
+		else if (leftstick.getRawAxis(2) >= .5 && rightstick.getRawAxis(2) < .5) // remove all of this
+		{
+			CurrentAuto = "Two Can from Step auto";
+			return 10;
 		}
 		else if (leftstick.getRawAxis(2) < .5 && leftstick.getRawAxis(2) > 0) 
 		{
