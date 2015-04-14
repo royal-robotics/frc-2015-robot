@@ -613,7 +613,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 1)                                             //Lower down canThief
 			{
-				if (canThief.getDistance() >= 79)
+				if (canThief.getDistance() >= 72)
 				{
 					moveThief(0.0);
 					if (canThiefTimer.get() > 0.5)
@@ -623,14 +623,14 @@ public class Robot extends IterativeRobot {
 				}
 				else 
 				{
-					moveThief(.60, 80);
+					moveThief(.60, 73);
 					canThiefTimer.reset();
 				}
 			
 			} 			
 			else if (autoState == 2)                                     // Drive forward with bins
 			{
-				if (rightDrive.getDistance() < 40)
+				if (rightDrive.getDistance() < 44)
 				{
 					// driveStraight(-.30);
 					robotDrive.mecanumDrive_Cartesian(0, -.3, 0, 0);
@@ -640,14 +640,15 @@ public class Robot extends IterativeRobot {
 					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
 					autoState++;
 					rightDrive.reset();
+					gyro.reset();
 				}
 			}	
 			else if (autoState == 3)                                  // Drive backwards
 			{
-				if (rightDrive.getDistance() > -38)
+				if (rightDrive.getDistance() > -34)
 				{
 					// driveStraight(.30);
-					robotDrive.mecanumDrive_Cartesian(0, .3, 0, 0);
+					robotDrive.mecanumDrive_Cartesian(0, .3, 0, gyro.getAngle());
 				}
 				else 
 				{
@@ -656,7 +657,7 @@ public class Robot extends IterativeRobot {
 					rightDrive.reset();
 				}
 				
-				if (rightDrive.getDistance() > -28)
+				if (rightDrive.getDistance() > -26)
 				{
 					moveThief(0.0);
 				}
@@ -691,7 +692,7 @@ public class Robot extends IterativeRobot {
 			}
 			else if (autoState == 6)
 			{
-				if (gyro.getAngle() < 190)
+				if (gyro.getAngle() < 180)
 				{
 					robotDrive.mecanumDrive_Cartesian(0, 0, .4, 0);
 				}
@@ -700,6 +701,117 @@ public class Robot extends IterativeRobot {
 					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
 					autoState++;
 				}
+			} 
+		}
+		else if (autoMode == 11)
+		{
+			if (autoState == 0)                                        //Drive backwards towards bins
+			{
+				if (rightDrive.getDistance() > -8) 
+				{
+					// driveStraight(.30);
+					robotDrive.mecanumDrive_Cartesian(0, .3, 0, gyro.getAngle());
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0.0, 0.0, 0.0, 0.0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}
+			else if (autoState == 1)                                             //Lower down canThief
+			{
+				if (canThief.getDistance() >= 79)
+				{
+					moveThief(0.0);
+					if (canThiefTimer.get() > 0.5)
+					{
+						autoState++;
+					}
+				}
+				else 
+				{
+					moveThief(.60, 80);
+					canThiefTimer.reset();
+				}
+			
+			} 			
+			else if (autoState == 2)                                     // Drive forward with bins
+			{
+				if (rightDrive.getDistance() < 40)
+				{
+					// driveStraight(-.30);
+					robotDrive.mecanumDrive_Cartesian(0, -.3, 0, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+					rightDrive.reset();
+				}
+			}	
+			else if (autoState == 3)                                  // Drive backwards
+			{
+				if (rightDrive.getDistance() > -36)
+				{
+					// driveStraight(.30);
+					robotDrive.mecanumDrive_Cartesian(0, .3, 0, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+					autoState++;
+					rightDrive.reset();
+				}
+				
+				if (rightDrive.getDistance() > -28)
+				{
+					moveThief(0.0);
+				}
+				else
+				{
+					moveThief(.30, 0);
+				}
+			}
+			else if (autoState == 4)                                  //Reset canThief
+			{
+				moveThief (.30, 0);
+				if (canThief.getDistance() <= 0)
+				{
+					moveThief(0.0);
+					autoState++;
+				}
+			} 
+			else if (autoState == 5)
+			{
+				if (rightDrive.getDistance() < 30)
+				{
+					// driveStraight(-.30);
+					robotDrive.mecanumDrive_Cartesian(0, -.3, 0, 0);
+				}
+				else 
+				{							
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+					rightDrive.reset();
+					gyro.reset();
+				}
+			}
+			else if (autoState == 6)
+			{
+				if (gyro.getAngle() < 180)
+				{
+					robotDrive.mecanumDrive_Cartesian(0, 0, .4, 0);
+				}
+				else 
+				{
+					robotDrive.mecanumDrive_Cartesian(0,0,0,0);
+					autoState++;
+				}
+			}
+			else if (autoState == 7)
+			{
+				
 			}
 		}
 		else if (autoMode == 6) 								// Drive Backwards from Yellow Crates
